@@ -1,68 +1,82 @@
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		    <meta charset="UTF-8">
-		        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-			    <link rel="stylesheet" href="fa.min.css">
-			        <title>米卡酱</title>
-				    
-				    <style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="fa.min.css">
+    <title>米卡酱酱</title>
+     <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+    <style>
         body {
-		            font-family: 'Arial', sans-serif;
-			                margin: 0;
-					            padding: 0;
-						                display: flex;
-								            align-items: center;
-									                justify-content: center;
-											            height: 100vh;
-												                background-color: #f4f4f4;
-														        }
-
-	        .card {
-			            background-color: #fff;
-				                border-radius: 8px;
-						            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-							                padding: 20px;
-									            margin: 10px;
-										                text-align: center;
-margin-bottom: 20px;
-flex-direction: column;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
             align-items: center;
-												        }
+            justify-content: center;
+            height: 100vh;
+            background: url('background.png') center/cover no-repeat;
+        }
 
-		        .icon {
-				            font-size: 24px;
-					                margin-bottom: 10px;
-							        }
-.avatar {
+        .card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 50px;
+            margin: 20px;
+            text-align: center;
+        }
+
+        .avatar {
             width: 100px; /* Adjust the width as needed */
             height: 100px; /* Adjust the height as needed */
             border-radius: 50%;
             margin-bottom: 20px;
-            flex-direction: column;
-            align-items: center;
+        }
+
+        .icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .twitter-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #007bff;
 }
-			        .social-link {
-					            text-decoration: none;
-						                color: #333;
-								        }
-				    </style>
-	</head>
-	<body>
-<div class="card">
-        <img src="avatar.png" alt="Avatar" class="avatar">
+  .social-link {
+             display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #333;
+        }
+  .page-link {
+            color: #fa8c35;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img src="avatar.png" alt="Your Avatar" class="avatar">
         <p>性别不是框定限制我的属性。</p>
+        
+        <a href="https://twitter.com/MtF_forever" class="social-link" target="_blank">
+            <i class="twitter-icon fab fa-twitter"></i>
+            Twitter
+        </a>
+        <a href="https://t.me/MtF_loveyou" class="social-link" target="_blank">
+            <i class="icon fab fa-telegram"></i>
+            Telegram
+        </a>
+                <a href="https://github.com/MtFloveU" class="social-link" target="_blank">
+            <i class="icon fab fa-github"></i>
+            GitHub
+        </a>
     </div>
-		    <!-- Your content goes here -->
-<div class="card">
-    <i class="icon fab fa-twitter"></i>
-    <a href="https://twitter.com/MtF_forever" class="social-link" target="_blank">Twitter</a>
-</div>
-<div class="card">
-    <i class="icon fab fa-telegram"></i>
-    <a href="https://t.me/MtF_loveyou" class="social-link" target="_blank">Telegram</a>
-</div>
-
-	</body>
+    <!-- Add more cards or content as needed -->
+</body>
+<p style="position: absolute; bottom: 0; width: 100%; text-align: center; font-size: 14px; color: white;">页面源代码：<a href="https://github.com/MtFloveU/MtFloveU.github.io" class="page-link" target="blank">GitHub Pages</p>
 </html>
-
-
