@@ -1,0 +1,392 @@
+var imgArr = [];
+var interVal;
+var index = 1;
+
+$(document).ready(function() {
+	//遍历反诈快报需要展示的内容
+	imgArr = jQuery.parseJSON($("#slideShowJson").val());
+
+	//显示第一张图片
+	if (imgArr.length > 0) {
+		showImageWithIndex(0);
+	}
+	fillslideshowContent(0);
+	interVal = setInterval(slideshow, 3000);
+});
+
+//根据图片index显示反诈快报的图片
+function showImageWithIndex(imageIndex) {
+	if (imageIndex == 0) {
+		//显示第一张
+		document.getElementById("slideshowImg0").style.display = "block";
+		document.getElementById("slideshowImg1").style.display = "none";
+		document.getElementById("slideshowImg2").style.display = "none";
+
+	} else if (imageIndex == 1) {
+		//显示第二张
+		document.getElementById("slideshowImg0").style.display = "none";
+		document.getElementById("slideshowImg1").style.display = "block";
+		document.getElementById("slideshowImg2").style.display = "none";
+
+	} else if (imageIndex == 2) {
+		//显示第二张
+		document.getElementById("slideshowImg0").style.display = "none";
+		document.getElementById("slideshowImg1").style.display = "none";
+		document.getElementById("slideshowImg2").style.display = "block";
+	}
+}
+
+function slideshow() {
+	//判断需要显示的图片
+	showImageWithIndex(index);
+
+	fillslideshowContent(index);
+
+	if (index >= imgArr.length - 1) {
+		index = 0;
+	} else {
+		index++;
+	}
+}
+
+function fillslideshowContent(indexNum) {
+	var htmlStr = "";
+	for (var i = 0; i < imgArr.length; i++) {
+		var brief = imgArr[i].brief;
+		brief = brief.length > 50 ? brief.substr(0, 50) + "..." : brief;
+		if (i == indexNum) {
+			htmlStr += bulidHtml(true, false, imgArr[i].cid, imgArr[i].day, imgArr[i].time, imgArr[i].title, brief, i);
+		} else {
+			if (i % 2 == 0) {
+				htmlStr += bulidHtml(false, false, imgArr[i].cid, imgArr[i].day, imgArr[i].time, imgArr[i].title, brief, i);
+			} else {
+				htmlStr += bulidHtml(false, true, imgArr[i].cid, imgArr[i].day, imgArr[i].time, imgArr[i].title, brief, i);
+			}
+		}
+	}
+	$("#slideshowword").html(htmlStr);
+}
+
+//建立反诈快报的样式
+function bulidHtml(isIndex, isOdd, cid, day, time, title, brief, indexNum) {
+	var htmlStr = "";
+	var bgColor = "";
+	var fontColor = "";
+	if (isIndex) {
+		bgColor = "#126AC4";
+		fontColor = 'style="color:#FFFFFF"'
+	} else {
+		if (isOdd) {
+			bgColor = "#FFFFFF";
+		} else {
+			bgColor = "#F6F7F9";
+		}
+	}
+
+	htmlStr += '<div class="menuItem" id="menuItem' + cid + '" onmouseover="mouseOver(' + indexNum + ')" onclick="getContent(' + cid + ')" onmouseout="mouseOut(' + indexNum + ')"  style="cursor:pointer;height: 93px;width:539px;background-color:' + bgColor + ';padding-top:8px;">';
+	htmlStr += '<table cellpadding="0"  cellspacing="0" border="0" width="519" style="padding-left:10px;padding-right: 10px">';
+	htmlStr += '<tr>';
+	htmlStr += '<td width="81" height="81">';
+	htmlStr += '<div class="time">';
+	htmlStr += '<div class="day" id="day' + cid + '" ' + fontColor + '>' + day + '</div>';
+	htmlStr += '<div class="yAndm" id="yAndm' + cid + '" ' + fontColor + '>' + time + '</div>';
+	htmlStr += '</div>';
+	htmlStr += '</td>';
+	htmlStr += '<td width="439" height="81">';
+	htmlStr += '<div class="word">';
+	htmlStr += '<div class="oneTitle" id="oneTitle' + cid + '" ' + fontColor + '>' + title + '</div>';
+	htmlStr += '<div class="oneBrief" id="oneBrief' + cid + '" ' + fontColor + '>' + brief + '</div>';
+	htmlStr += '</div>';
+	htmlStr += '</td></tr></table></div>';
+	return htmlStr;
+}
+
+//鼠标放在反诈快报某个新闻上
+function mouseOver(indexNum) {
+	clearInterval(interVal);
+	index = indexNum;
+	setColor(indexNum);
+
+	//判断需要显示的图片
+	showImageWithIndex(indexNum);
+}
+
+//鼠标移开
+function mouseOut(indexNum) {
+	index = indexNum;
+	interVal = setInterval(slideshow, 3000);
+}
+
+//设置反诈快报背景色
+function setColor(indexNum) {
+	//遍历ImgArr
+	for (var i = 0; i < imgArr.length; i++) {
+		if (i == indexNum) {
+			//如果是当前的下标，就把该个变蓝色
+			$("#menuItem" + imgArr[i].cid).css("background-color", "#126AC4");
+			$("#day" + imgArr[i].cid).css("color", "#FFFFFF");
+			$("#yAndm" + imgArr[i].cid).css("color", "#FFFFFF");
+			$("#oneTitle" + imgArr[i].cid).css("color", "#FFFFFF");
+			$("#oneBrief" + imgArr[i].cid).css("color", "#FFFFFF");
+		} else {
+			//如果不是当前下标，就分奇偶
+			if (i % 2 == 0) {
+				//偶数行
+				$("#menuItem" + imgArr[i].cid).css("background-color", "#F6F7F9");
+				$("#day" + imgArr[i].cid).css("color", "#666666");
+				$("#yAndm" + imgArr[i].cid).css("color", "#666666");
+				$("#oneTitle" + imgArr[i].cid).css("color", "#666666");
+				$("#oneBrief" + imgArr[i].cid).css("color", "#666666");
+			} else {
+				//奇数行
+				$("#menuItem" + imgArr[i].cid).css("background-color", "#FFFFFF");
+				$("#day" + imgArr[i].cid).css("color", "#666666");
+				$("#yAndm" + imgArr[i].cid).css("color", "#666666");
+				$("#oneTitle" + imgArr[i].cid).css("color", "#666666");
+				$("#oneBrief" + imgArr[i].cid).css("color", "#666666");
+			}
+		}
+	}
+}
+
+//金融常识下的子菜单切换
+function tabChange(id) {
+	var tab = $(".threetab");
+	for (var i = 0; i < tab.length; i++) {
+		if ("threetab" + id == tab[i].id) {
+			$("#" + tab[i].id).addClass("threeTabSeled");
+			$("#" + tab[i].id).removeClass("threeTabUnSeled");
+
+		} else {
+			$("#" + tab[i].id).addClass("threeTabUnSeled");
+			$("#" + tab[i].id).removeClass("threeTabSeled");
+		}
+	}
+	//切换内容
+	var context = $(".threeContext");
+	for (var i = 0; i < context.length; i++) {
+		if ("TopicContext" + id == context[i].id) {
+			$("#" + context[i].id).fadeIn(600); //切换内容
+		} else {
+			$("#" + context[i].id).fadeOut(0); //切换内容
+		}
+	}
+}
+
+//申诉常识下的子菜单切换
+function tabfiveChange(id) {
+	var tab = $(".fivetab");
+	for (var i = 0; i < tab.length; i++) {
+		if ("fivetab" + id == tab[i].id) {
+			$("#" + tab[i].id).addClass("threeTabSeled");
+			$("#" + tab[i].id).removeClass("threeTabUnSeled");
+
+		} else {
+			$("#" + tab[i].id).addClass("threeTabUnSeled");
+			$("#" + tab[i].id).removeClass("threeTabSeled");
+		}
+	}
+	//切换内容
+	var context = $(".fiveContext");
+	for (var i = 0; i < context.length; i++) {
+		if ("TopicContext" + id == context[i].id) {
+			$("#" + context[i].id).fadeIn(600); //切换内容
+		} else {
+			$("#" + context[i].id).fadeOut(0); //切换内容
+		}
+	}
+}
+
+//点击最上方右侧的版块名称以定位该版块内容
+function topicTabChange(tid) {
+	var topicTab = $(".topicTab");
+	for (var i = 0; i < topicTab.length; i++) {
+		if (topicTab[i].id == "topicTab" + tid) {
+			$("#" + topicTab[i].id).css({
+				"font-weight" : "bold",
+				"border-bottom" : "3px solid #FFFFFF"
+			})
+		} else {
+			$("#" + topicTab[i].id).css({
+				"font-weight" : "normal",
+				"border-bottom" : "0px"
+			})
+		}
+	}
+	isScoll = false;
+	var target_top = $("#topic" + tid).offset().top - 20;
+	$("html,body").animate({
+		scrollTop : target_top
+	}, 500, function() {
+		isScoll = true;
+	});
+}
+
+$(window).scroll(function() {
+	var mainDivs = $(".mainDiv");
+	for (var i = 0; i < mainDivs.length; i++) {
+		whereDiv("#" + mainDivs[i].id)
+	}
+});
+
+var curTab = "";
+var isScoll = true;
+function whereDiv(cid) {
+	var currentscrollTop = $(document).scrollTop();
+	var top = $(cid).offset().top;
+	var height = $(cid).outerHeight(true);
+	if (currentscrollTop - top + 60 > 0 && currentscrollTop - top - 20 < height) {
+		if (isScoll) {
+			if (curTab != cid) {
+				curTab = cid; //说明有更换了
+				var tid = cid.substr(6, cid.length);
+				var topicTab = $(".topicTab");
+				for (var i = 0; i < topicTab.length; i++) {
+					if (topicTab[i].id == "topicTab" + tid) {
+						$("#" + topicTab[i].id).css({
+							"font-weight" : "bold",
+							"border-bottom" : "3px solid #FFFFFF"
+						})
+					} else {
+						$("#" + topicTab[i].id).css({
+							"font-weight" : "normal",
+							"border-bottom" : "0px"
+						})
+					}
+				}
+			}
+		}
+	}
+}
+
+//跳转银行链接
+function getBank(id, name, url) {
+	$.ajax({
+		type : "post",
+		url : "updatebank",
+		timeout : 6000,
+		async : false,
+		data : {
+			bid : id
+		},
+		success : function(data, textStatus) {
+			if (data == url) {
+				window.open(url, "_blank");
+			} else {
+				alert("链接错误，请刷新页面重试")
+			}
+		},
+		complete : function(data, textStatus) {}
+	});
+}
+
+//文章列表页面跳转
+function viewMore(tid, subTopic) {
+
+	//反诈快报		viewMore(1,'003B94DE1C5308B2')
+	//骗术揭秘		viewMore(2,'')
+	//金融常识		viewMore(3,'F04071859941E18F')
+	//通信常识		viewMore(7,'')
+	//申述常识		viewMore(8,'F04071859941E18F')
+
+	if (tid == 1) {
+		//反诈快报
+		window.open("articlesPcNews", "_blank");
+
+	} else if (tid == 2) {
+		//骗术揭秘
+		window.open("articlesPcSecret", "_blank");
+
+	} else if (tid == 3) {
+		//金融常识	
+		window.open("articlesPcFinance", "_blank");
+
+	} else if (tid == 7) {
+		//通信常识	
+		window.open("articlesPcContact", "_blank");
+
+	} else if (tid == 8) {
+		//申述常识
+		window.open("articlesPcExplain", "_blank");
+	}
+}
+
+//文章详情页面跳转
+function getContent(cid) {
+
+	/**
+	 * 20210706 edit by xiekai
+	 * 按照要求，对文章id为179的文章进行单独处理，直接跳转交汇点新闻链接。
+	 * 文章标题：视频 | “反正我没钱，骗子骗不到我！”面对诈骗，这样想就危险了！
+	 */
+
+	if (cid == 179) {
+		window.open("https://jnews.xhby.net/v3/waparticles/8e13518ef3e34682acd1ec4684848cd2/6XfRMGpcy8cf9G9H/1", "_blank");
+
+	} else if (cid == 210) {
+		window.open("https://mp.weixin.qq.com/s/5bQU429XWdsHfrTlAwefwA", "_blank");
+
+	} else {
+		var parames = new Array();
+		parames.push({
+			name : "articleId",
+			value : cid
+		});
+
+		Post("articleDetail", parames);
+	}
+}
+
+//模拟form表单的提交
+function Post(URL, PARAMTERS) {
+	//创建form表单
+	var temp_form = document.createElement("form");
+	temp_form.action = URL;
+
+	//target，窗口打开方式： _blank _self
+	temp_form.target = "_blank";
+	temp_form.method = "post";
+	temp_form.style.display = "none";
+
+	//添加参数
+	for (var item in PARAMTERS) {
+		var opt = document.createElement("textarea");
+		opt.name = PARAMTERS[item].name;
+		opt.value = PARAMTERS[item].value;
+		temp_form.appendChild(opt);
+	}
+	document.body.appendChild(temp_form);
+
+	//提交数据
+	temp_form.submit();
+}
+
+//********** 竞赛活动入口 **********//
+function contestEnterClick() {
+	//直接跳首页，过滤器会判断用户是否登录来决定跳首页还是登录页
+	//window.open("contestMain", "_blank");
+}
+
+//********** 网页飘窗方法 **********//
+//点击飘窗
+function clickAdWindow() {
+	$.ajax({
+		type : "post",
+		url : "clickAdWindow",
+		timeout : 6000,
+		async : false,
+		data : {
+			"flag" : "1" // 必须传参
+		},
+		success : function(data, textStatus) {
+			window.open("https://mp.weixin.qq.com/s/vU709b69q-4mnMU1WEZ8GQ", "_blank");
+		},
+		complete : function(data, textStatus) {}
+	});
+}
+
+//关闭飘窗
+function closeAdWindow() {
+	document.getElementById('ADWINDOW').style.display = "none";
+}
+//********** 网页飘窗方法 **********//

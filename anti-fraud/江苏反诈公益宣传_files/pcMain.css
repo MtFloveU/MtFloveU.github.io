@@ -1,0 +1,100 @@
+p,font{
+	font-family:SimHei;
+}
+
+
+.time{
+	width: 81px;
+	height: 81px;
+	display: inline-block;
+}
+.day{
+	width: 81px;
+	font-size:36px;
+	color:#666666;
+	font-weight:normal;
+	height:53px;
+	text-align: center;
+	line-height: 53px;
+}
+.yAndm{
+	width: 81px;
+	height:28px;
+	color:#666666;
+	font-weight:light;
+	text-align: center;
+	line-height: 28px;
+	font-size: 12px;
+}
+.word{
+	height:81px;
+	width:439;
+	padding-left:10px;
+	display: inline-block;
+	
+}
+
+.oneTitle{
+	height:41px;
+	width: 435px;
+	
+	color:#666666;
+	text-overflow: ellipsis;overflow: hidden;white-space: nowrap;
+	line-height: 41px;
+	font-size:18px;
+	font-weight:600;
+	cursor:pointer;
+}
+.oneBrief{
+	height:40px;
+	width: 435px;
+	color:#868686;
+	font-weight:light;
+	line-height: 1.5em;
+	font-size: 13px;
+	cursor:pointer;
+}
+
+.bankZero{
+	border:1px solid #126AC4;
+	width: 90%;
+	height:35px;
+	background-color: #126AC4;
+	line-height: 35px;
+	text-align: center;
+	border-radius: 35px;
+	font-size: 16px;
+	color: #FFFFFF;
+	font-weight: normal;
+	cursor:pointer;
+}
+
+.threeTabSeled{
+	text-align:center;
+	font-size: 16px;
+	font-weight:900;
+	height:34px;
+	line-height:34px;
+	color:#063258;
+	cursor:pointer;
+	border-bottom: 4px solid #06305A;
+}
+
+.threeTabUnSeled{
+	text-align:center;
+	font-size: 14px;
+	height:34px;
+	line-height:34px;
+	cursor:pointer;
+	
+}
+
+.footer{
+	padding-right:45px;
+	color: #666666;
+}
+
+.rightInfo{
+	
+	
+}
