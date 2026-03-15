@@ -9,7 +9,7 @@
     "versionCode": 114,
     "enabledVersionCode": 114,
     "baseURL": {
-      "ycj": "http://192.168.1.8:8081",
+      "ycj": "https://ycjapi-cf.lkf666.dpdns.org",
       "dsh-recommend-all": "https://jljsyx.cn/dsh/app/ycj/recommend-all",
       "dsh-book-page": "https://jljsyx.cn/dsh/app/ycj/book-page",
       "yxw": "https://jljsyx.cn"
