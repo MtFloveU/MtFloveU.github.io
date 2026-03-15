@@ -1,0 +1,36 @@
+{
+  "desc": {
+    "versionName": "5.7.8",
+    "title": "新版本升级啦",
+    "sysnotice": "",
+    "content": "功能修复及优化",
+    "enabled": 1,
+    "url": "https://hhy-assist.obs.cn-north-4.myhuaweicloud.com/app/ycj_static/phoneupgrade/ycj-android-5.7.8.apk",
+    "versionCode": 114,
+    "enabledVersionCode": 114,
+    "baseURL": {
+      "ycj": "http://192.168.1.8:8081",
+      "dsh-recommend-all": "https://jljsyx.cn/dsh/app/ycj/recommend-all",
+      "dsh-book-page": "https://jljsyx.cn/dsh/app/ycj/book-page",
+      "yxw": "https://jljsyx.cn"
+    },
+    "demoURL": {
+      "ycj": "https://demo.yunchengji.net",
+      "dsh-recommend-all": "https://demo.yuntigao.net/dsh/app/ycj/recommend-all",
+      "dsh-book-page": "https://demo.yuntigao.net/dsh/app/ycj/book-page",
+      "yxw": "https://demo.yuntigao.net"
+    },
+    "testURL": {
+      "ycj": "https://test.yunchengji.net",
+      "dsh-recommend-all": "http://wish.yuntigao.net/dsh/app/ycj/recommend-all",
+      "dsh-book-page": "http://wish.yuntigao.net/dsh/app/ycj/book-page",
+      "yxw": "http://wish.yuntigao.net"
+    },
+    "testVer": [],
+    "noticetitle": "公告",
+    "notice": "",
+    "weixinpay": 1,
+    "wxkfurl": "https://work.weixin.qq.com/kfid/kfc7c0e0774a3933f9c"
+  },
+  "result": "1"
+}

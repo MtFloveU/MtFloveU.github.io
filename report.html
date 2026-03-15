@@ -1,0 +1,543 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+	<meta name="format-detection" content="telephone=no">
+	<title>学情分析</title>
+	<link type="text/css" href="../css/stu-report.css" rel="stylesheet"/>
+	<script type="text/javascript">
+		function back(){wishApp.goApp();}
+	</script>
+</head>
+<body>
+<div id="report" v-cloak>
+	<div class="loading" v-show="loading"></div>
+	<div class="menu-box">
+		<ul class="menu">
+			<li v-for="(sub,index) in cache.subjects" :class="[sub.id == subject.id?'current':'','subjects']">
+				<v-touch @tap="subjectSwitch(sub.id, sub.name, index)">{{ sub.name }}</v-touch>
+			</li>
+		</ul>
+	</div>
+	<transition name="switch">
+	<v-touch v-show="view" id="viewContent" class="fix-content" @swipeleft="nextSubject()" @swiperight="preSubject()" :swipe-options="{direction: 'horizontal'}">
+		<div class="banner">
+			<p class="banner-title">{{ exam.studentname }}的{{ subject.name }}分析报告</p>
+			<p class="which-exam" v-html="exam.name"></p>
+		</div>
+		<!-- 成绩单 -->
+		<div v-show="exam.showcjd == 1">
+			<v-order :datas="cache['-100'].stuOrder.orders" :level-show="cache[subject.id].stuOrder.levelShow" :score-show="cache[subject.id].stuOrder.scoreShow" :class-order-show="cache[subject.id].stuOrder.classOrderShow" :school-order-show="cache[subject.id].stuOrder.schoolOrderShow" :union-order-show="cache[subject.id].stuOrder.unionOrderShow" :nj-vip="vip.njpm" :lk-vip="vip.lkpm" :exam-type-str="cache[subject.id].examTypeStr" :subject-id="subject.id" :show-ysf="cache['-100'].nsFlag"></v-order>
+			<!-- 分数差距 -->
+			<v-gap :datas='cache[subject.id].stuOrder.gaps' :subject-name="subject.name" :score-show="cache[subject.id].stuOrder.scoreShow" :top-show="cache[subject.id].stuOrder.topShow" :avg-show="cache[subject.id].stuOrder.avgShow" :fscj-vip="vip.fscj" :hlz-vip="vip.hlz" :hlz-show="exam.showhlz == 1" :desc="cache[subject.id].stuOrder.scoreGapDesc"></v-gap>
+		</div>
+		<!-------- 成长分析部分 -------->
+		<h1 class="bor-bottom">成长分析</h1>
+		<!-- 进退步分析 -->
+		<div class="plr30">
+			<h2 class="tab-title">进退步分析
+				<div class="fr-tab" v-if="!vip.cjqs">
+					<v-touch @tap='seGrowCreater("class")'><span :class="{current:grow.tag == 'class'}">班级</span></v-touch>
+					<v-touch @tap='seGrowCreater("school")'><span :class="{current:grow.tag == 'school'}">年级</span></v-touch>
+					<v-touch @tap='seGrowCreater("union")' v-if="cache[subject.id].examType != 0"><span :class="{current:grow.tag == 'union'}">{{ cache[subject.id].examTypeStr }}</span></v-touch>
+				</div>
+			</h2>
+			<template v-if="vip.cjqs">
+				<v-touch @tap="callPayVip()"><span class="analy-pic"></span></v-touch>
+			</template>
+			<template v-else>
+				<div class="echart-title">
+				<span class="standard-score">标准分</span>
+				<div class="this-exam"><span class="diamond"></span>本次考试</div>
+				</div>
+				<div id="growChart" class="echart-data"></div>
+				<p class="echart-summary" v-if="cache[subject.id] != undefined && cache[subject.id].grow != undefined && cache[subject.id].grow[grow.tag] != undefined && cache[subject.id].grow[grow.tag].desc != null" v-html="getGrowDesc()"></p>
+			</template>
+		</div>
+		<!-- 你的位置 -->
+		<div class="plr30 mt20" v-show='cache[subject.id].segmentFlag != 0'>
+			<h2 class="tab-title">
+				你的位置
+				<div class="fr-tab">
+					<v-touch @tap='seSegmentCreater("class")' v-if="cache[subject.id].segmentFlag > 0"><span :class="{current:segment.tag == 'class'}">班级</span></v-touch>
+					<v-touch @tap='seSegmentCreater("school")' v-if="cache[subject.id].segmentFlag > 0 && cache[subject.id].segmentFlag < 3"><span :class="{current:segment.tag == 'school'}">学校</span></v-touch>
+					<v-touch @tap='seSegmentCreater("union")' v-if="cache[subject.id].examType != 0 && cache[subject.id].segmentFlag == 1"><span :class="{current:segment.tag == 'union'}">{{ cache[subject.id].examTypeStr }}</span></v-touch>
+				</div>
+			</h2>
+			<div v-show="!segment.segmentVip">
+				<div v-show="!segment.noData">
+					<div @touchstart.stop>
+						<div id="segmentChart" class="echart-data mb20"></div>
+					</div>
+					<p class="echart-summary" v-if="cache[subject.id].segment != undefined && cache[subject.id].segment[segment.tag] != undefined">
+						你在<span>{{ segment.tag == 'school' ? "年级" : (segment.tag == 'class' ? "班级" : cache[subject.id].examTypeStr) }}</span>的 <span class="ft-orange">{{ cache[subject.id].segment[segment.tag].pointSegment }}</span>分数段内，
+						<span v-if="cache[subject.id].segment[segment.tag].pointY - 1 > 0">
+							一共有{{ cache[subject.id].segment[segment.tag].pointY - 1}}个小伙伴和你一样在这个分数段内，只要你稍加努力就能够超过他们!
+						</span>
+						<span v-else>
+							没有小伙伴和你一起在这个分数段内，感觉有点小孤单哦！
+						</span>
+					</p>
+				</div>
+				<div v-show="segment.noData" class="no-data">
+					暂时没有数据
+				</div>
+			</div>
+			<div v-show="segment.segmentVip">
+				<v-touch @tap="callPayVip()"><span class="position-pic"></span></v-touch>
+			</div>
+		</div>
+		<!-- 魔法宝盒 -->
+		<div v-show="subject.id == '-100' && cache['-100'].orderFlag != 0 && (cache['-100'].showYxb || cache['-100'].showLxcj || cache['-100'].showQkdny)">
+			<h2 class="magic-title">魔法宝盒</h2>
+			<template v-for="box in magincbox">
+				<v-touch class="single-box" @tap="toSub('magic-' + box.type)" v-if="cache['-100'].showYxb && box.type=='heroes' || cache['-100'].showLxcj && box.type=='ideal' || cache['-100'].showQkdny && box.type=='moving'">
+					<span :class="box.className + '-icon'"></span>
+					<div class="single-con">
+						<p class="icon-text">{{ box.name }}</p>
+						<p class="icon-text-grey">{{ box.desc }}</p>
+					</div>
+					<span class="click-arrow"></span>
+				</v-touch>
+			</template>
+		</div>
+		<!-- 问题诊断 -->
+		<div v-show="subject.id == '-100'">
+			<h1 class="bor-bottom">问题诊断</h1>
+			<div class="plr30">
+				<h2 class="tab-title">偏科分析
+					<div class="fr-tab" v-if="!vip.brxk">
+						<v-touch @tap='seWeekCreater("class")'><span :class="{current:week.tag == 'class'}">班级</span></v-touch>
+						<v-touch @tap='seWeekCreater("school")'><span :class="{current:week.tag == 'school'}">年级</span></v-touch>
+						<v-touch @tap='seWeekCreater("union")' v-if="cache[subject.id].examType != 0"><span :class="{current:week.tag == 'union'}">{{ cache[subject.id].examTypeStr }}</span></v-touch>
+					</div>
+				</h2>
+				<template v-if="vip.brxk"><v-touch @tap="callPayVip()"><span class="diag-pic"></span></v-touch></template>
+				<template v-else>
+					<div class="echart-legend">
+						<span><i class="dash-blue"></i>总分{{ weekStrTitle() }}</span>
+						<span v-if="cache[subject.id].week != undefined && cache[subject.id].week[week.tag] != undefined">{{ weekVal() }}<span v-if="weekStrTitle() == '超越率'">%</span></span>&nbsp;<span><i class="solid-red"></i>&nbsp;单科{{ weekStrTitle() }}</span>
+					</div>
+					<div id="weekChart" class="radar-height"></div>
+					<p class="result">诊断结果：</p>
+					<p class="echart-summary" v-if="cache[subject.id].week != undefined && cache[subject.id].week[week.tag] != undefined">
+						<span v-if="cache[subject.id].week[week.tag].desc.type == -1">无</span>
+						<span v-else-if="cache[subject.id].week[week.tag].desc.type == -2">各科目水平相当！</span>
+						<span v-else-if="cache[subject.id].week[week.tag].desc.type == 0">
+							<span v-if="cache[subject.id].week[week.tag].desc.maxSubject != ''">在同{{ week.tag == 'school' ? "年级" : (week.tag == 'class' ? "班级" : cache[subject.id].examTypeStr) }}范围内：你的{{ cache[subject.id].week[week.tag].desc.maxSubject }}表现最好，</span>
+							<span v-if="cache[subject.id].week[week.tag].desc.minSubject != ''">{{ cache[subject.id].week[week.tag].desc.minSubject }}相对最薄弱，</span>
+							<span v-if="cache[subject.id].week[week.tag].desc.avgUpSubject != ''">{{ cache[subject.id].week[week.tag].desc.avgUpSubject }}与你的总分相比，属于拉高总分的科目，是你自己相对优势的科目！</span>
+							<span v-if="cache[subject.id].week[week.tag].desc.avgLowerSubject != ''">{{ cache[subject.id].week[week.tag].desc.avgLowerSubject }}与你的总分相比，属于拖后腿的科目，相对较薄弱，要认真做好学科分析！</span>
+						</span>
+					</p>
+				</template>
+			</div>
+		</div>
+		<!-- 志愿规划 -->
+		<template v-if="subject.id == '-100' && cache['-100'].showBkzn">
+			<h1 class="bor-bottom">志愿规划{{exam.bkzntype}}</h1>
+			<div class="bk-ranking">
+				<span class="fl">您的高考志愿单</span>
+				<span class="fr"><i>您的省排名:&nbsp;</i>211231</span>
+			</div>
+			<div class="ml30 bt">
+				<div class="bkzn-model" v-for="(guide, index) in guideInfo">
+					<div class="fl">
+						<span :class="'bkzn-icon' + (index + 1)"></span>
+						<span class="number">{{ guide.num }}</span>
+						<span class="ft-grey">所大学可{{ index == 0 ? "冲刺":"报考"}}</span>
+					</div>
+					<div class="fr">
+						<span class="ft-grey-box">录取风险：&nbsp;</span>
+						<span class="possible">{{ guide.rate }}</span>
+					</div>
+				</div>
+				<p class="explain">注：以上数据只是样例数据，真实数据请在"志愿规划"模块中查看</p>
+				<v-touch @tap="callBkzn()"><input type="button" value="马上查看" class="btn-check" /></v-touch>
+			</div>
+		</template>
+		<!-- 单科报告 -->
+		<div v-show="subject.id != '-100' && cache[subject.id].questionScoreShow">
+			<h1 class="bor-bottom">问题诊断</h1>
+			<!-- 各难度丢分 -->
+			<v-dif :datas="cache[subject.id].loses" :dtzd-vip="vip.dtzd"></v-dif>
+			<template v-if='vip.dtzd'><v-touch @tap="callPayVip()"><input type="button" class="check-btn" value="查看各难度丢分题"/></v-touch></template>
+			<template v-else><v-touch @tap="toSub('sub-lose')"><input type="button" class="check-btn" value="查看各难度丢分题"/></v-touch></template>
+			<!-- 答题对比分析 -->
+			<v-rate :datas="cache[subject.id].questRates" :score-show="cache[subject.id].stuOrder.scoreShow" :dtzd-vip="vip.dtzd" :exam-type="cache[subject.id].examType" :exam-type-str="cache[subject.id].examTypeStr" :question-rate-show="cache[subject.id].questionRateShow"></v-rate>
+			<template v-if='vip.dtzd && cache[subject.id].questRates != undefined && cache[subject.id].questRates.length > 3'><v-touch @tap="callPayVip()"><input type="button" class="check-btn" value="查看全部试题分析"/></v-touch></template>
+			<template v-if='!vip.dtzd && cache[subject.id].questRates != undefined && cache[subject.id].questRates.length > 3'><v-touch @tap="toSub('sub-score-rate')"><input type="button" class="check-btn" value="查看全部试题分析"/></v-touch></template>
+			<!-- 待补习知识点 -->
+			<template v-if="cache[subject.id].knowledges != undefined && cache[subject.id].knowledges.length > 0 ">
+				<v-knowledge :datas="cache[subject.id].knowledges" :brd-vip="vip.brd" :exam-type="cache[subject.id].examType" :exam-type-str="cache[subject.id].examTypeStr" :dq-flag="false" :question-rate-show="cache[subject.id].questionRateShow"></v-knowledge>
+				<v-touch v-if="vip.brd && cache[subject.id].knowledges.length > 1" @tap="callPayVip()"><button type="button" class="check-btn">查看全部{{ cache[subject.id].knowledges.length }}个待补习知识点分析</button></v-touch>
+			</template>
+			<!-- 个人能力诊断 -->
+			<div v-show="(cache[subject.id].qtc != undefined && cache[subject.id].qtc.data.length > 0) || qtcInit">
+				<p class="space-title">个人能力诊断</p>
+				<div v-show="vip.brd"><v-touch @tap="callPayVip()"><span class="radar-pic"></span></v-touch></div>
+				<div v-show="!vip.brd">
+					<div id="qtcChart" class="radar-height"></div>
+				</div>
+				<template v-if="cache[subject.id].qtc != undefined">
+					<p class="qtc-summary" v-html="cache[subject.id].qtc.desc" v-show="!vip.brd"></p>
+					<!-- 能力对比分析 -->
+					<p class="space-title">能力对比分析</p>
+					<div class="ml30 bd">
+						<table class="tblist">
+							<tr>
+								<th width="19%">能力</th>
+								<th width="23%">我的得分率</th>
+								<th width="19%" v-if="cache[subject.id].questionRateShow!=0">班得分率</th>
+								<th width="19%" v-if="cache[subject.id].questionRateShow==1 || cache[subject.id].questionRateShow==2">校得分率</th>
+								<th v-if="cache[subject.id].examType != 0 && cache[subject.id].questionRateShow==1">{{ cache[subject.id].examTypeStr }}得分率</th>
+							</tr>
+							<tr v-for="(qtc, index) in cache[subject.id].qtc.data" v-if="!vip.brd || (vip.brd && index < 1)">
+								<td class="normal-style">{{ qtc.name }}</td>
+								<td>{{ qtc.scoreRate }}%</td>
+								<td v-if="cache[subject.id].questionRateShow!=0 && vip.brd"><v-touch @tap="callPayVip()"><span class=no-vip-icon></span></v-touch></td>
+								<td v-if="cache[subject.id].questionRateShow!=0 && !vip.brd">{{qtc.classScoreRate}}%</td>
+								<td v-if="(cache[subject.id].questionRateShow==1 || cache[subject.id].questionRateShow==2) && vip.brd"><v-touch @tap="callPayVip()"><span class=no-vip-icon></span></v-touch></td>
+								<td v-if="(cache[subject.id].questionRateShow==1 || cache[subject.id].questionRateShow==2) && !vip.brd">{{qtc.schoolScoreRate}}%</td>
+								<td v-if="cache[subject.id].questionRateShow==1 && cache[subject.id].examType != 0 && vip.brd"><v-touch @tap="callPayVip()"><span class=no-vip-icon></span></v-touch></td>
+								<td v-if="cache[subject.id].questionRateShow==1 && cache[subject.id].examType != 0 && !vip.brd">{{qtc.unionScoreRate}}%</td>
+							</tr>
+						</table>
+					</div>
+					<v-touch v-if="vip.brd" @tap="callPayVip()"><button type="button" class="check-btn">查看全部{{ cache[subject.id].qtc.data.length }}个待提升能力分析</button></v-touch>
+				</template>
+			</div>
+			<!----------------------- 提分指导 -------------------->
+			<template v-if="cache[subject.id].guide != undefined">
+				<h1 class="bor-bottom">提分指导</h1>
+				<p class="score-guide">
+					依据大数据S-P模型分析，结合教育专家的科学提分方法，应重点关注学生与同水平学生的对比，依照学生能力按照由易到难的顺序进行学习，建立信心提升学习效果，
+					<template v-if="cache[subject.id].guide.totalScore > 0">
+						云成绩建议您按照以下提分指导进行学习，可提升<span class='ft-style'>{{ cache[subject.id].guide.totalScore }}</span>分。
+					</template>
+					<template v-else>
+						云成绩将您与同水平学生对比分析后，暂无快速提分空间。
+					</template>
+				</p>
+				<template v-for="improve in cache[subject.id].guide.improves">
+					<div v-if="vip.tfzd">
+						<v-touch v-if="improve.title == '可快速提升空间'" @tap="callPayVip()" class="space-fast">
+							<p class="guide-title">{{ improve.title }}</p>
+							<p class="space-text">同水平学生及大多数同学已掌握题目，预计提分<span>{{ improve.score }}</span>分</p>
+						</v-touch>
+						<v-touch v-if="improve.title == '可稳固提升空间'" @tap="callPayVip()" class="space-improve">
+							<p class="guide-title">{{ improve.title }}</p>
+							<p class="space-text">同水平学生已掌握，可攻克的题目，预计提分<span>{{ improve.score }}</span>分</p>
+						</v-touch>
+						<v-touch v-if="improve.title == '注重巩固空间'" @tap="callPayVip()" class="space-attention">
+							<p class="guide-title">{{ improve.title }}</p>
+							<p class="space-text">比同水平学生掌握好的题目，要做巩固学习，避免猜中答案而忽略了知识漏洞。</p>
+						</v-touch>
+					</div>
+					<div v-else>
+						<div class="margin-style">
+							<p class="small-title">{{ improve.title }}</p>
+							<p class="subject-type">{{ improve.subTitle }}</p>
+						</div>
+						<div class="ml40 bd">
+							<table class="tb-improve">
+								<tr>
+									<th width="18%">题目</th>
+									<th width="15%">失分</th>
+									<th width="35%" v-if="improve.showKnowledge">知识点</th>
+									<th v-if="improve.showAbi">能力</th>
+								</tr>
+								<tr v-for="question in improve.data">
+									<td>{{ question.title }}</td>
+									<td>{{ question.score }}</td>
+									<td class="normal-style" v-if="improve.showKnowledge">{{ question.knowledge }}</td>
+									<td class="normal-style" v-if="improve.showAbi">{{ question.ability }}</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</template>
+				<p class="space-summary" v-if="!vip.tfzd && cache[subject.id].guide.totalScore > 0">{{ cache[subject.id].guide.analysisDesc }}</p>
+				<p class="notice">注：提分指导是根据学生应答情况分析得出，若某个提分空间不存在属于正常情况</p>
+			</template>
+		</div>
+		<v-explan :avg-flag="cache[subject.id].avgFlag != 0 && exam.showcjd == 1" :hlz-flag="exam.showcjd == 1 && exam.showhlz == 1" :order-flag="cache[subject.id].orderFlag != 0" :segment-flag="cache[subject.id].segmentFlag != 0" :subject-flag="subject.id != '-100'"></v-explan>
+		<!--底部弹出-->
+		<div class="reward-box" v-show="subject.id != '-100' && (exam.dtkshow == 'true' || cache[subject.id].questionScoreShow)">
+			<div class="btn-boxs">
+				<v-touch v-show="exam.dtkshow == 'true'" @tap="callPaper()"><input type="button" class="btn-single" value="查看答卷"/></v-touch>
+				<v-touch v-show="cache[subject.id].questionScoreShow" @tap="toSub('sub-analysis')"><input type="button" class="btn-single" value="试卷解析"/></v-touch>
+			</div>
+		</div>
+		<!-- 打赏 -->
+		<template v-if="subject.id == '-100' && exam.vipstate == 3">
+			<div class="reward-box">
+				<v-touch @tap="callReward"><input type="button" value="我要打赏" class="btn-reward"/></v-touch>
+				<p>感谢小悟和教师的付出</p>
+			</div>
+		</template>
+		<!-- 开通会员 -->
+		<v-touch @tap="callPayVip()" class="btn-open-vip" v-if="(exam.vipstate == 0 || exam.vipstate==2) && exam.allowfree == 'false'">
+			<span>开通<br/>会员 </span>
+		</v-touch>
+	</v-touch>
+	</transition>
+</div>
+<script type="text/javascript" src="../component/Vue.js"></script>
+<script type="text/javascript" src="../component/polyfill.js"></script>
+<script type="text/javascript" src="../component/axios.js"></script>
+<script type="text/javascript" src="../component/hammer.js"></script>
+<script type="text/javascript" src="../component/vue-touch.min.js"></script>
+<script type="text/javascript" src="../component/echarts.min.js"></script>
+<script type="text/javascript" src="../../js/app.js"></script>
+<script type="text/javascript" src="../js/report-vue.js"></script>
+<script type="text/javascript" src="../js/report-charts.js"></script>
+<script type="text/javascript" src="../js/report-common.js"></script>
+<script type="text/javascript" src="../js/data-creater.js"></script>
+
+<script type="text/javascript">
+var vueReport;
+wishApp.shareBtn(true);
+window.onload = function(){
+	//	加载失败刷新
+	try{
+		console.log(Vue);
+	}catch(error){
+		var r = confirm("o((⊙﹏⊙))o. 可能由于网络问题，页面加载失败啦，刷新试试");
+		if(r){wishApp.webReload();}
+	}
+
+	Vue.use(VueTouch, {name: 'v-touch'});
+	vueReport = new Vue({
+		el: '#report',
+		data: {
+			cache:{
+				"-100":{
+					init:true,
+					stuOrder:{orders:[],gaps:[]},
+					week:{},
+					grow:{},
+					segment:{}
+				}
+			},	//	缓存文件
+			subject:{
+				id:"-100",
+				name:"全科",
+				index:0,
+				pushID:0
+			},//当前科目
+			segment:{tag:"school",data:{},segmentVip:false,noData:false},//	你的位置
+			grow:{tag:"school",data:{}},	//	成长曲线
+			week:{tag:"school",data:{}},	//	薄弱科目
+			top:0,
+			exam:{},
+			vip:{},
+			qtcInit: true,
+			loading: true,
+			view: false,
+			guideInfo: [{num:10,rate:"高"},{num:16,rate:"低"},{num:18,rate:"很低"},{num:22,rate:"极低"}],
+			magincbox: [{className:"progress",type:"ideal",name:"理想成绩",desc:"如果提升10分，我能排多少名"},{className:"moving",type:"moving",name:"乾坤大挪移",desc:"看看我在其他班能排多少名"},{className:"heroes",type:"heroes",name:"英雄榜",desc:"和同学PK，我哪里强，哪里弱"}]
+		},
+		watch: {
+			// 强制拦截VIP状态判断对象，将其所有设为需要付费的限制属性解锁(赋值为 false)
+			vip: {
+				handler: function(val) {
+					for (var key in val) {
+						if (val[key] !== false) {
+							val[key] = false;
+						}
+					}
+				},
+				deep: true
+			},
+			// 强制修改考试信息的会员状态参数，欺骗应用将其判定为VIP
+			exam: {
+				handler: function(val) {
+					if (val) {
+						if (val.vipstate !== 3) val.vipstate = 3;
+						if (val.allowfree !== 'true') val.allowfree = 'true';
+						if (val.showsjjvip !== 'false') val.showsjjvip = 'false';
+					}
+				},
+				deep: true
+			},
+			// 解决依赖VIP变量的二次赋值变量
+			segment: {
+				handler: function(val) {
+					if (val && val.segmentVip !== false) {
+						val.segmentVip = false;
+					}
+				},
+				deep: true
+			}
+		},
+		mounted:function(){
+			wishApp.clearSessionCache("sub2");
+			wishApp.callSessionCache("sub1");
+			wishApp.callSessionCache("current_report");	//获取考试数据
+			this.view = true;
+		},
+		methods:{
+			dataInit:function(){
+				dataGetter.subjectsGetter();
+				if(this.subject.id == '-100'){
+					dataGetter.totalGetter(!this.vip.brxk);
+				}else{
+					if(this.cache[this.subject.id].segmentFlag == 3){
+						this.segment.tag = "class";
+						this.segment.segmentVip = this.vip.bjndwz;
+					}
+					this.loading = false;
+				}
+
+				this.qtcInit = !this.vip.brd;
+				this.segment.segmentVip = this.vip.njndwz;
+
+				if(this.cache[this.subject.id].segmentFlag == 3){
+					this.segment.segmentVip = this.vip.bjndwz;
+				}
+				this.$nextTick(function(){
+					if(!this.vip.cjqs){dataGetter.growGetter();}
+					dataGetter.segmentGetter(!this.vip.njndwz);
+					if(this.subject.id != '-100'){dataGetter.qtcGetter();}			//	获取考查能力
+					if(this.subject.id == '-100' && !this.vip.brxk){dataGetter.weekGetter("school");}//薄弱学科
+					document.getElementById('viewContent').scrollTop = this.top;
+					//	计算科目初始化位置
+					var curSubject = document.getElementsByClassName('subjects')[this.subject.index];
+					if(curSubject.offsetLeft + curSubject.offsetWidth > curSubject.parentNode.offsetWidth){
+						curSubject.parentNode.scrollLeft = curSubject.offsetLeft - curSubject.parentNode.offsetWidth + curSubject.offsetWidth + this.subject.index;
+					}
+				});
+				wishApp.closeBar();
+			},
+			subjectSwitch:function(id, name, index){
+				if(id == this.subject.id){return false;}
+				var report = this;
+				report.loading = true;
+				report.view = false;
+				report.qtcInit = true;
+				Vue.set(report.segment, "noData", false);
+				if(report.cache[id] == undefined || report.cache[id].stuOrder == undefined){	//	StuOrder 判断是否从试题分析中出来的
+					dataGetter.subjectGetter(id, name, index);
+				}else{
+					Vue.set(report.subject, "id", id);
+					Vue.set(report.subject, "name", name);
+					Vue.set(report.subject, "index", index);
+
+					if(this.subject.id != '-100'){
+						dataGetter.knowledgeGetter();	  //单科报告获取知识点
+					}
+
+					if(!this.vip.cjqs){
+						this.grow.tag = "";
+						this.seGrowCreater("school");
+					}
+					this.segment.tag = "school";
+					this.segment.segmentVip = this.vip.njndwz;
+					if(this.cache[this.subject.id].segmentFlag == 3){
+						this.segment.tag = "class";
+						this.segment.segmentVip = this.vip.bjndwz;
+					}
+
+					report.loading = false;
+
+					setTimeout(function(){
+						//	渲染完成后执行
+						report.view = true;
+						report.$nextTick(function(){
+							dataGetter.segmentGetter(!this.segment.segmentVip);
+							if(report.subject.id == "-100"){
+								if(!this.vip.brxk){
+									var cache = this.cache['-100'], tag = this.week.tag
+									charts.drawWeek("weekChart", cache.week[tag], cache.stuOrder[tag + "OrderShow"]);
+								}
+							}else{
+								dataGetter.qtcGetter();
+							}
+							document.getElementById('viewContent').scrollTop = 0;
+							this.top = 0;
+						});
+					}, 450);
+				}
+			},
+			seGrowCreater:function(type){
+				if(type == this.grow.tag){return false};
+				this.grow.tag = type;
+				dataGetter.growGetter();
+			},
+			seSegmentCreater:function(type){
+				if(type == this.segment.tag){return false;}
+				this.segment.tag = type;
+				if(type == "class" && this.vip.bjndwz){
+					this.segment.segmentVip = true;
+				}else if(type == "school" && this.vip.njndwz){
+					this.segment.segmentVip = true;
+				}else if(type == "union" && this.vip.lkndwz){
+					this.segment.segmentVip = true;
+				}else{
+					this.segment.segmentVip = false;
+				}
+
+				this.$nextTick(function(){
+					dataGetter.segmentGetter(!this.segment.segmentVip);
+				});
+			},
+			seWeekCreater:function(type){
+				if(type == this.week.tag){return false;}
+				this.week.tag = type;
+				var cache = this.cache['-100'], tag = this.week.tag
+
+				this.$nextTick(function(){
+					dataGetter.weekGetter(type);
+				});
+			},
+			toSub:function(type){	//	跳转子页
+				this.top = document.getElementById('viewContent').scrollTop;
+				wishApp.setSessionCache("sub1", JSON.stringify({"top":this.top,"subject":{id:this.subject.id,name:this.subject.name,index:this.subject.index}}));
+				window.location.href = encodeURI(this.exam.base + "/app/student/report/html/" + type + ".html");
+			},
+			callPayVip:function(){wishApp.callVip();},
+			callPaper:function(){
+				if(this.vip.dtk && this.exam.showsjjvip == "false"){
+					wishApp.callVip();
+				}else{
+					wishApp.callPaper(this.exam.nsflag, this.exam.id, this.subject.id, "");
+				}
+			},
+			gotoPush:function(){wishApp.gotoPush(this.subject.pushID)},//试题推送
+			callReward:function(){wishApp.callReward();},
+			callBkzn:function(){wishApp.callBkzn();},//	报考指南
+			weekStrTitle:function(){
+				if(this.subject.id == '-100'){
+					return this.cache['-100'].stuOrder[this.week.tag + "OrderShow"] ? "超越率" : "标准分";
+				}
+			},
+			weekVal:function(){
+				var val = this.cache["-100"].week[this.week.tag].total[0];
+				return val;
+			},
+			preSubject:function(){
+				if(this.subject.index == 0){
+					return false;
+				}
+				var subject = this.cache.subjects[this.subject.index - 1];
+				this.subjectSwitch(subject.id, subject.name, this.subject.index - 1);
+			},
+			nextSubject:function(){
+				if(this.subject.index == this.cache.subjects.length - 1){
+					return false;
+				}
+				var subject = this.cache.subjects[this.subject.index + 1];
+				this.subjectSwitch(subject.id, subject.name, this.subject.index + 1);
+			},
+			getGrowDesc:function(){
+				return base64.decode(this.cache[this.subject.id].grow[this.grow.tag].desc);
+			}
+
+		}
+	});
+}
+</script>
+</body>
+</html>

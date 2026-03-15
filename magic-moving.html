@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+	<meta name="format-detection" content="telephone=no">
+	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+	<meta http-equiv="Pragma" content="no-cache">
+	<meta http-equiv="Expires" content="0">
+	<title>乾坤大挪移</title>
+	<link type="text/css" href="../css/stu-report.css" rel="stylesheet"/>
+	<style type="text/css">
+		body { background-color: #f2f5f8; }
+		.show-order { color: #333; font-weight: bold; }
+	</style>
+	<script type="text/javascript">
+		function back(){ wishApp.location("/app/student/report/html/report.html"); }
+	</script>
+</head>
+<body>
+<div id="report">
+	<div class="loading" v-show="loading"></div>
+	<div v-cloak v-show="view">
+		<template v-if="isShow == 0">
+			<!-- 学校屏蔽了该功能 -->
+			<div class="function-box">
+				<div class="no-function-icon"></div>
+				<p class="tip-message">很遗憾，无法使用</p>
+				<p class="tip-reason">由于学校关闭了此功能</p>
+			</div>
+		</template>
+		 <template v-else>
+			<div class="fixed-moving">
+				<div class="space-bg"></div>
+				<div class="line-hint">如果我在其他班级，能排多少名 </div>
+			</div>
+			<!-- 移除了 needPay 判断，统一使用非支付样式 -->
+			<div class="con-style">
+				<div class="model-single" v-if="cache['-100'] != undefined">
+					<div class="model-line" v-for="(rank, index) in cache['-100'].moveClasses">
+						<span class="show-ranking">{{ rank.className }}</span>
+						<span class="show-order">{{rank.order}}</span>
+					</div>
+				</div>
+			</div>
+			<div class="fix-footer">
+				<div class="space-bg"></div>
+			</div>
+		</template>
+	</div>
+</div>
+
+<script type="text/javascript" src="../component/Vue.js"></script>
+<script type="text/javascript" src="../js/data-creater.js"></script>
+<script type="text/javascript" src="../../js/app.js"></script>
+<script type="text/javascript" src="../component/polyfill.js"></script>
+<script type="text/javascript" src="../component/axios.js"></script>
+<script type="text/javascript" src="../component/hammer.js"></script>
+<script type="text/javascript" src="../component/vue-touch.min.js"></script>
+
+<script type="text/javascript">
+var vueReport;
+if(window.wishApp && wishApp.shareBtn) {
+    wishApp.shareBtn(false);
+}
+
+window.onload = function(){
+	vueReport = new Vue({
+		el: '#report',
+		data: {
+			cache: {},
+			exam: {},
+			top: 0,
+			subject: {id: "-100"},
+			loading: true,
+			needPay: false,
+			view: false,
+			isShow: 1,
+			vip: {}
+		},
+		mounted: function(){
+			if(window.wishApp) {
+				wishApp.callSessionCache("current_report");
+				wishApp.closeBar();
+			}
+
+			// 强行轮询，防止局部状态被异步重写覆盖
+			setInterval(() => {
+				let changed = false;
+				if (this.needPay !== false) {
+					this.needPay = false;
+					changed = true;
+				}
+				if (this.isShow !== 1) {
+					this.isShow = 1;
+					changed = true;
+				}
+				if (changed) {
+					this.$forceUpdate();
+				}
+			}, 100);
+		},
+		methods: {
+			dataInit: function(){
+				this.needPay = false;
+				this.loading = false;
+				this.view = true;
+				if(window.dataGetter) {
+					dataGetter.moveClassesGetter();
+				}
+			},
+			payChecked: function(){
+				this.needPay = false;
+				this.loading = false;
+				this.view = true;
+			},
+			pay: function(){
+				console.log("VIP 功能已解锁");
+			}
+		}
+	});
+}
+</script>
+</body>
+</html>
